@@ -1,0 +1,23 @@
+{
+    "name": "microservices-with-reactjs-and-nodejs",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "posts": "cd posts && npm run start",
+        "comments": "cd comments && npm run start",
+        "client": "cd client && npm run start",
+        "event-bus": "cd event-bus && npm run start",
+        "query": "cd query && npm run start"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Stefafrontani/microservices-with-reactjs-and-nodejs.git"
+    },
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/Stefafrontani/microservices-with-reactjs-and-nodejs/issues"
+    },
+    "homepage": "https://github.com/Stefafrontani/microservices-with-reactjs-and-nodejs#readme"
+}
