@@ -30,7 +30,6 @@ const handleEvents = (type, data) => {
 		comment.status = status;
 		comment.content = content;
 	}
-
 }
 
 app.get('/posts', (req, res) => {
