@@ -85,6 +85,11 @@ spec:                                     // How the object we are creating (pod
     - name: posts                         // The '-' means array, here we hav e1 container only
       image: stefanofrontani/posts:0.0.1  // The image we want to use to create. If we do not apply :versionNumber, it will put :latest. Not only that, if you do not add the version, kubernetes will try to get it from docker hub, find it in the computer im running on
 
+Despite having created a pod like above, We should create pods through "deployment" because deployments will work as managers of those containers and keep them alive (restart if container crashed and updated those containers with the most recent code, assuming we write some new code for exmaple)
+
+
+
+
 ## Commands Cheatsheet
 
 $ kubectl get pods
