@@ -4,6 +4,7 @@
 $ docker build -t {dockerId}/{service} .
 $ docker build -t stefanofrontani/posts .
 // Build an image based on the dockerfile in the current directory 'root/posts/' and tag it as stefanofrontani/posts
+$ docker build -t stefanofrontani/posts:0.0.1 .
 
 $ docker run {imageId || imageTag}
 // Create and start a container based on the provided image id or tag
@@ -104,6 +105,15 @@ spec:
       labels:
         app: posts        // Exact configuration of the pod  we want to deploymente to create. We want the pod to have a label of app: posts
     spec
+
+Ways to update pods deployment
+A)
+  1- Make a change in souce code
+  2- Rebuild the image with another version ( $ docker build -t stefanofrontani/posts:0.0.2 . ). (inside ./posts/.)
+  3- Update version of the image (containers: - name \n image: ...:0.0.2 ) inside our deployment file (posts-depl.yaml)
+  4- Re apply the kubernetes deployment config file (inside ./infrastructure/k8s/.)
+
+
 
 
 ## Commands Cheatsheet
