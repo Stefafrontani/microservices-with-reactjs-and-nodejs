@@ -121,6 +121,18 @@ B)
   5- Run $ kubectl rollout restart deployment posts-depl -> Restart the deployment (so it uses the latst version of that image :latest)
 
 
+Kubernetes Services
+They are used for all networking related stuff. Communicating between pods, or a pod from an external souce.
+In our
+
+Types of kubernetes services
+Cluster IP
+  Any time we want to commnunitcate between different pods inside our cluster
+Node port
+  Access our pod fromoutside the cluster. Only in development
+Load balancer
+  Same as node prot bu the good way. They work differently
+External name
 
 ## Commands Cheatsheet
 
