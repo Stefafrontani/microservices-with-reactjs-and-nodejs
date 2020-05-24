@@ -282,3 +282,36 @@ Again, if we want to see the pods $ kubectl get pods, quite quickly, we would se
  */
  This means it is being terminated to restart another deploy. It's ok
 
+Add kubernetes services for comments, query, moderation, following these steps
+1- Update the urls / addresses for every service can reach event-bus-srv
+2- Build images
+  - $ docker build -t stefanofrontani/comments .
+  - $ docker build -t stefanofrontani/query .
+  - $ docker build -t stefanofrontani/moderation .
+3- push to docker hub
+  - $ docker push stefanofrontani/comments
+  - $ docker push stefanofrontani/query
+  - $ docker push stefanofrontani/moderation
+4- Create a deployment for every pod
+  - comments-depl.yaml
+  - query-depl.yaml
+  - moderation-depl.yaml
+5- Create clusterip for every service
+  - comments-depl.yaml
+  - query-depl.yaml
+  - moderation-depl.yaml
+6- Update the urls / addresses of event-bus, to send events to cluster service clusterIp service instead of the previous express routes
+event-bus/index
+  change urls from localhost to the specific kubernetes service we want to reach
+  http://localhost:4001/events -> http://comments-srv:4001/events'
+  http://localhost:4002/events -> http://query-srv:4002/events'
+  http://localhost:4003/events -> http://moderation-srv:4003/events'
+
+AS we change the code, we have to rebuild the event-bus image
+  $ docker build -t stefanofrontani/event-bus .
+
+Push it to the hub for the deploy to can restart
+  $ docker push stefanofrontani/event-bus
+
+Push it to the hub for the deploy to can restart
+  $ kubectl rollout restart deployment event-bus-depl
