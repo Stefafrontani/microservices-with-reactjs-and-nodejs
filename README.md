@@ -76,6 +76,8 @@ Tells kubernetes about the different deployments, pods and services (refered as 
 Written in YAML syntax
 Stored in source code directory, root of the project. It is used as a documentation
 
+./posts.yaml
+
 apiVersion: v1                            // This object we are going to create is extendable. Here we can specify that extension, adding our own custom objects
 kind: Pod                                 // Type of object to create
 metadata:                                 // Information about the object pod we are creating needs to behave
@@ -87,7 +89,21 @@ spec:                                     // How the object we are creating (pod
 
 Despite having created a pod like above, We should create pods through "deployment" because deployments will work as managers of those containers and keep them alive (restart if container crashed and updated those containers with the most recent code, assuming we write some new code for exmaple)
 
-
+Change file to posts-depl.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: posts-depl
+spec:
+  replicas:
+  selector:
+    matchLabels:
+      app: posts          // Get every pod ever created with the name "posts". app: posts could be whatever, pepe: lucas. It is just a key value pair
+  template:
+    metadata:
+      labels:
+        app: posts        // Exact configuration of the pod  we want to deploymente to create. We want the pod to have a label of app: posts
+    spec
 
 
 ## Commands Cheatsheet
@@ -115,3 +131,16 @@ $ kubectl apply -f {configFileName}
 
 $ kubectl describe pod {podName}
 // Print out some information about the running pod
+
+// Deployment
+
+$ kubectl get deployments
+
+$ kubectl describe deployment posts-depl
+
+$ kubectl apply -f {deplymentFile}
+i.e.: $ kubectl apply -f posts-depl.yaml
+
+$ kubectl delete deployment {deploymentName}
+i.e.: $ kubectl delete deployment posts-depl.yaml
+
