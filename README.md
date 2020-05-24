@@ -242,3 +242,43 @@ spec:
       protocol: TCP
       port: 4000
       targetPort: 4000
+
+We first start changing the urls of the express services
+In ./posts/index, where the posts express service try to reach out to event-bus, it wont do it with localhost. It first reaches the service that belongs to that pod, the event-bus-srv. That event-bus-srv name is the replacement for the url
+http://localhost:4005/events -> http://event-bus-srv:4005/events
+Same for event-bus/index.js, where the event-bus try to reach out to the other services, it will have to reach the specific kubernetes services and not the express service directly
+http://localhost:4000/events -> http://posts-srv:4000/events
+
+After this, we should update the kubernetes posts and event-bus deployments.
+inside ./posts/
+$ docker build -t stefanofrontani/posts .
+$ docker push stefanofrontani/posts
+
+inside ./event-bus/
+$ docker build -t stefanofrontani/event-bus .
+$ docker push stefanofrontani/event-bus
+
+After this, restart both deployments. First we run the command to get the names of those deployments and then we restart them
+$ kubectl get deployments
+
+Note: If we run kubectl get pods, we should see some pods with more minutes of age that we should expect. This is because the deployments had not been restarted yet
+$ kubectl get pods
+/*
+  NAME                              READY   STATUS    RESTARTS   AGE
+  event-bus-depl-768d45577b-9mtnf   1/1     Running   0          77m
+  posts-depl-55bf8f8f88-56v2j       1/1     Running   0          152m
+ */
+
+// To get deployments we need to restart
+$ kubectl rollout restart deployment posts-depl
+$ kubectl rollout restart deployment event-bus-depl
+// To restart both deployments
+
+Again, if we want to see the pods $ kubectl get pods, quite quickly, we would see something like this:
+/*
+  event-bus-depl-6dfbbf775f-2wx4s   1/1     Running       0          17s
+  event-bus-depl-768d45577b-9mtnf   0/1     Terminating   0          79m
+  posts-depl-6889b4c89f-xjhfq       1/1     Running       0          23s
+ */
+ This means it is being terminated to restart another deploy. It's ok
+
