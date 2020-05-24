@@ -206,3 +206,13 @@ $ kubectl describe service posts-srv
 $ kubectl apply -f {serviceFile}
 i.e.: $ kubectl apply -f posts-srv.yaml
 
+
+Build a deployment for event-bus pod
+
+1. Create event-bus image (inside the ./event-bus directory)
+  $ docker build -t stefanofrontani/event-bus .
+2. Push to docker hub
+  $ docker push stefanofrontani/event-bus
+3. Create kubernetes deployment for event-bus (event-bus-depl.yaml)
+4. Build that deployment in step .3
+  $ kubectl apply -f event-bus-depl.yaml
