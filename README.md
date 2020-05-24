@@ -216,3 +216,29 @@ Build a deployment for event-bus pod
 3. Create kubernetes deployment for event-bus (event-bus-depl.yaml)
 4. Build that deployment in step .3
   $ kubectl apply -f event-bus-depl.yaml
+
+Build ClusterIP services for event-bus and posts
+1. Add config file service in the same files were deployment are created. This is done separated code from objects with a ---
+Structure:
+deployment
+---
+service
+2. Build those newly created objects with 
+// $ kuberctl apply -f {filename}
+// $ kuberctl apply -f posts-depl.yaml
+// $ kuberctl apply -f event-bus-depl.yaml
+The structure of these services are very much alike the NodePort created before
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: posts-clusterip-srv   // Change name so it wont override the last service
+spec:
+  selector:
+    app: posts
+  type: ClusterIP            // This is the default (if type ommited, clusterIP is going to be created. Put it anyway)
+  ports:
+    - name: posts
+      protocol: TCP
+      port: 4000
+      targetPort: 4000
