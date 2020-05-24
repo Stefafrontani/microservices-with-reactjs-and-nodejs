@@ -121,6 +121,33 @@ B)
   5- Run $ kubectl rollout restart deployment posts-depl -> Restart the deployment (so it uses the latst version of that image :latest)
 
 
+Kubernetes Services
+They are used for all networking related stuff. Communicating between pods, or a pod from an external souce.
+In our case, we start using NodePort to communicate from outside the app to our kluster
+
+We first create the kubernete service object insdie the posts-srv.yaml file
+There we specify a lot of things, the relevant that deserves explanation are:
+
+apiVersion: v1           // It does not extendes from apps like deploymentss
+kind: Service            // We are creating a service now
+metadata:
+  name: posts-srv
+spec:
+  type: NodePort         // Important, type of service being created
+  selector:
+    app: posts
+  ports:
+    - name: posts
+      protocol: TCP
+      port: 4000
+      targetPort: 4000   // Ports
+
+// This type of service has 3 type of ports:
+nodePort   : specify when running $ kuberctl describe service posts-srv.
+             This is the port that communciates from outside to our cluster
+             localhost:nodePort/posts
+port       : the port of the service that will redirect the request to our container, pod
+targetPort : the port we effectively set inside our express service
 
 Types of kubernetes services
 Cluster IP
@@ -168,4 +195,14 @@ i.e.: $ kubectl apply -f posts-depl.yaml
 
 $ kubectl delete deployment {deploymentName}
 i.e.: $ kubectl delete deployment posts-depl.yaml
+
+// Service
+
+$ kubectl get services
+// it will show the service created by kubernetes and there we can grab for example, the nodePort to access that localhost:3xxx/posts
+
+$ kubectl describe service posts-srv
+
+$ kubectl apply -f {serviceFile}
+i.e.: $ kubectl apply -f posts-srv.yaml
 

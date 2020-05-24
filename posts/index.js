@@ -35,6 +35,5 @@ app.post('/events', (req, res) => {
 });
 
 app.listen(4000, () => {
-    console.log('Posts pod updated - Not manually')
     console.log('Listening on: 4000')
 });
