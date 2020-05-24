@@ -113,6 +113,12 @@ A)
   3- Update version of the image (containers: - name \n image: ...:0.0.2 ) inside our deployment file (posts-depl.yaml)
   4- Re apply the kubernetes deployment config file (inside ./infrastructure/k8s/.)
 
+B)
+  1- Make sure the deployment is using the ":latest" version of the image in the spec section
+  2- Make a change in code
+  3- Build the image
+  4- Push the image to the docker hub ( $ docker login -> and enter credentials before )
+  5- Run $ kubectl rollout restart deployment posts-depl -> Restart the deployment (so it uses the latst version of that image :latest)
 
 
 
