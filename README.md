@@ -315,3 +315,149 @@ Push it to the hub for the deploy to can restart
 
 Push it to the hub for the deploy to can restart
   $ kubectl rollout restart deployment event-bus-depl
+
+
+Load balancer Service & Ingress or Ingress Controller
+
+Load Balancer Service
+Tells kubernetes to reach out to its provider and provision a load balancer. Gets traffic in to a single pod
+
+Ingress Controller
+A pod with a set of routing rules to distribute traffic to other services
+
+ _ _ _ _ _ _ _ _       _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+|               |     |  Cloud Provider (once deployed of course - AWS, goog. cloud, azzuure)   |
+|               |     |        A                                                                |
+|    Outside    |     |        |                          _ _ _ _ _ _ _ _ _ _ _ _ _ _ _         |
+|    World      |     |        |_ _ _ _ _ _ _ _ _ _ _ _ _| _ _Our Cluster              |        |
+|               |     |                                  |                             |        |
+|               |   _ | _ _ _ _ _       _ _ _ _ _ _ _    |     _ _ _ _                 |        |
+|               |  |  | Load     |     | Ingress     |   |    | POD   |                |        |
+|             <-|--|--|-Balancer |     | Controller  |---|----|->     |                |        |
+|               |  |_ |_ _ _ _ _ |     | _ _ _ _ _ _ |   |    |_ _ _ _|                |        |
+|               |     |                                  |_ _ _ _ _ _ _ _ A _ _ _ _ _ _|        |
+|_ _ _ _ _ _ _ _|     | _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ | _ _ _ _ _ _ _ _ _ _ |
+                                                                          |
+                                                          _ _ _ _ _ _ _ _ | _ _ _ _ _ _
+                                                         |  Config file for            |
+                                                         |  LoadBalancer Service       |
+                                                         |_ _ _ _ _ _ _ _ _ _ _ _ _ _ _|
+
+At some point, our cluster might be running ina  cloud provider
+We would like to have communication to outside world, and that we will do by creating this loading balancer
+Untill now, everything was inside a cluster
+But the LoadBalancer Service will ask the provider OUTSIDE the our cluster to ask for provision of a LoadBalancer
+Config LoadBalancerService -> Cloud provider -> Load balancer -> GET SOME TRAFFIC
+The goal is to get traffic distributed along some pods (comments, posts, etc)
+The loadBalancer does not do this, this will be the purpose of the ingress controller. It is a pod that will have routes inside it and will work together with the loadBalancer to distribute the traffic into the different pods. To the clusterIp services in reality
+
+The ingress controller we are going to used is the ingress-nginx (another one is kubernetes-ingress)
+
+From the docs https://kubernetes.github.io/ingress-nginx/deploy/
+We have to run that
+- $ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-0.32.0/deploy/static/provider/cloud/deploy.yaml
+
+After that, we create the file:
+/ingress-srv.yaml
+  apiVersion: networking.k8s.io/v1beta1
+  kind: Ingress
+  metadata:
+    name: ingress-srv
+    annotations:
+      kubernetes.io/ingress.class: nginx             // This would be the file that kbernetes would try to match and that file will be in charge of defining those routes
+  spec:
+    rules:
+      - host: posts.com
+        http:
+          paths:
+            - path: /posts
+              backend:
+                serviceName: posts-clusterip-srv
+                servicePort: 4000
+
+When we define our routes rules, in here the posts.com would be the key of the rules we are going to define in http key
+Like: When we go to posts.com, please use these defined routes to see where to send the requests from outside world
+
+When in develop we do not want to define the routes por psots.com but for localhost.
+To trick the machine when going to posts.com, and instead of going to the real posts.com it go to the localhost, we have to modify this file C:\Windows\System32\drivers\etc
+And add the following line
+127.0.0.1 posts.com
+
+So:
+If we go to url posts.com/posts, we are actually going to be doing a request to our 127.0.0.1.
+That request at the smae time is going to be going to ingress-srv. Ingress-ngnix is gonna think that we are wanting to go to posts.com and will be applying the rules we defined in ingress-srv.yaml
+
+IF we enter to posts.com/posts, we should see the object of posts return by the express posts server
+
+After this, we should match all the routes used in our clientand cchange them:
+From:
+  http://localhost:4000/posts
+  http://localhost:4001/posts/${postId}/comments
+  http://localhost:4002/posts
+To:
+  http://posts.com/posts
+  http://posts.com/posts/${postId}/comments
+  http://posts.com/posts
+
+After this, we build again an image of the client (stefanofrontani/client) to use in the deployment file (./client-depl.yaml)
+$ docker build -t stefanofrontani/client .
+
+Then, we create the yaml file for the deployment-pod of the client ./client-depl.yaml
+$ kubectl apply -f client-depl.yaml
+
+After doing all of that, heres a summary of the next routes we should configure on the ingress nginx
+
+ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+|                                                                                                           |
+|                                  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _            _ _ _ _ _ _ _ _ _ _       |
+|                                 |                                    |         |        POD        |      |
+|                                 |        (POST)  --  /posts          |         |_ _ _ _ _ _ _ _ _ _|      |
+|                           _ _ _ | _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _| _ _ _ _ |                   |      |
+|                          |                                                     |   _ _ _ _ _ _ _   |      |
+|                          |                                                     |  |    POSTS    |  |      |
+|                          |                                                     |  |_ _ _ _ _ _ _|  |      |
+|                          |                                                     |_ _ _ _ _ _ _ _ _ _|      |
+|                          |                                                                                |
+|                          |        _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _           _ _ _ _ _ _ _ _ _ _       |
+|                          |       |                                    |        |        POD        |      |
+|                          |       |  (POST)  --  /posts/:id/comments   |        |_ _ _ _ _ _ _ _ _ _|      |
+|                          | _ _ _ | _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _| _ _ _ _|                   |      |
+|                          |                                                     |   _ _ _ _ _ _ _   |      |
+|                          |                                                     |  |  COMMENTS   |  |      |
+|                          |                                                     |  |_ _ _ _ _ _ _|  |      |
+|                          |                                                     |_ _ _ _ _ _ _ _ _ _|      |
+|                          |                                                                                |
+|                          |        _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _           _ _ _ _ _ _ _ _ _ _       |
+|    _ _ _ _ _ _ _ _       |       |                                    |        |        POD        |      |
+|   |                |     |       |          (GET)  --  /posts         |        |_ _ _ _ _ _ _ _ _ _|      |
+|   |    Ingress     |_ _ _| _ _ _ | _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _| _ _ _ _|                   |      |
+|   |   Controller   |     |                                                     |   _ _ _ _ _ _ _   |      |
+|   |_ _ _ _ _ _ _ _ |     |                                                     |  |    QUERY    |  |      |
+|                          |                                                     |  |_ _ _ _ _ _ _|  |      |
+|                          |                                                     |_ _ _ _ _ _ _ _ _ _|      |
+|                          |                                                                                |
+|                          |                                                      _ _ _ _ _ _ _ _ _ _       |
+|                          |                                                     |        POD        |      |
+|                          |                                                     |_ _ _ _ _ _ _ _ _ _|      |
+|                          |                                                     |                   |      |
+|                          |                                                     |   _ _ _ _ _ _ _   |      |
+|                          |                                                     |  | MODERATION  |  |      |
+|                          |                                                     |  |_ _ _ _ _ _ _|  |      |
+|                          |                                                     |_ _ _ _ _ _ _ _ _ _|      |
+|                          |                                                                                |
+|                          |        _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _           _ _ _ _ _ _ _ _ _ _       |
+|                          |       |                                    |        |        POD        |      |
+|                          |       |              (GET)  --  /          |        |_ _ _ _ _ _ _ _ _ _|      |
+|                          | _ _ _ | _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _| _ _ _ _|                   |      |
+|                                                                                |   _ _ _ _ _ _ _   |      |
+|                                                                                |  |    REACT    |  |      |
+|                                                                                |  |_ _ _ _ _ _ _|  |      |
+|                                                                                |_ _ _ _ _ _ _ _ _ _|      |
+|                                                                                                           |
+|_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _|
+
+The problem?
+Our ingress controller can not know the difference between a request POST and another with GET
+For it POST --> /posts  &&   GET --> /posts is just the same.
+This is the reason why we have to modify some urls for in order to make it possible to route them through our ingress controller
+We need to modify our client and the express services
