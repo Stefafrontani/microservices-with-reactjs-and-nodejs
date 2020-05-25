@@ -494,3 +494,61 @@ inside /client
 $ kubectl rollout restart deployment client-depl
 inside /posts
 $ kubectl rollout restart deployment posts-depl
+
+
+Skaffold
+This tool is to automate the updates of deployments of our pods/services - cluster kubernetes objects in general while we develop them, change something in the code
+Remember that we create changes in our code, we should follow several steps in order to update the cloud:
+- Change soure code
+- Re-build the image
+  $ docker apply -t stefanofrontani/posts .
+- Push the image to the docker hub
+  $ docker push stefanofrontani/posts
+- Run the command to rebuild the object yaml
+  $ kubectl rollout restart deployment {deployName.yaml}
+
+Skaffold will help us to:
+- Run/Create every object in infrastructure directory (or whichever we decide) when skaffold is turned on
+- Update the image inside the cluster
+- Delete / Remove every object created in the cluster when skaffol is turned off
+
+./skaffold.yaml
+  apiVersion: skaffold/v2alpha3
+  kind: Config
+  deploy:
+    kubectl:
+      manifests:
+        - ./infrastructure/k8s/*  // Will do this 3 things:
+                                  // 1) Any time we create a file or change a file inside that directory skaffold will reapply that file to our kubernetes cluster
+                                  // 2) Update those objects whenever the file inside are updated
+                                  // 3) Remove the objects created from them when skaffold is turned off
+build:
+  local:
+    push: false
+  artifacts:
+    - image: stefanofrontani/client
+      context: client
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.js'
+            dest: .
+
+local push -> will not push to docker hub
+the artifacs section:
+something inside that path is needed to be mantain. In this case, client directory ./client
+Skaffold will try to update our pods
+1) If we make changes in a js file inside src, skaffold will take that file and copy direcly inside the pod
+2) If we make changes outside that src, does not match src/**/*,  for example a dependency installed, skaffold will completly re-build the image and updated the deployment type attach to it
+
+After creating skaffold.yaml file, we run $ skaffold dev to initialize, inside the root microservices project root folder
+
+Skaffold Caveats
+1. Using change detection or file detection software inside containers has always been is trciky. There are some file watchers (nodemon - create-react-app) that might not detect files changes inside containers. You may not see any output from skaffold
+2. We still need tools such as webpack-dev-server and nodemon to show changes in code when develop.
+Those and all these skaffold related stuff, are two different ways of watch changes and update, in different levels.
+
+Currently
+- Skaffold does not remove objects created from the yaml files
+- Skaffold throws error the first time/s we run skaffold dev but eventually works. Run the command several times, as advice from the video
