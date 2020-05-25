@@ -1,11 +1,20 @@
 # PROJECT
 ## Lessons learnt
-The big challenge in mciroservices is data.
-Different ways to share data between services. Async and sync. Focus on async.
-Async communication focues on communicating changes using event sent to an event bus.
-Async communication encourages each service to be 100% self-sufficient. It makes it relatively easy to handle temporary downtime or new service creation.
-Docker makes it easier to package up services.
-Kubernetes is a pain to setup, but makes it really easy to deploy and scale apps
+- The big challenge in mciroservices is data.
+- Different ways to share data between services. Async and sync. Focus on async.
+- Async communication focues on communicating changes using event sent to an event bus.
+- Async communication encourages each service to be 100% self-sufficient. It makes it relatively easy to handle temporary downtime or new service creation.
+- Docker makes it easier to package up services.
+- Kubernetes is a pain to setup, but makes it really easy to deploy and scale apps
+
+## Painful things  ||  Solutions
+- Lots of duplication code.  ||  Build a central library as an NPM module to share code between our different projects.
+- Really hard to picture the flow of the events between services.  ||  Pricesely define all of our event in the above mentioned shared library.
+- Really hard to remember what properties an event should have.  ||  Write everything using typescript.
+- Really hard to test some event flows (think of moderation, first create a post, then a comment iwth "orange word", then without, refresh several times, etc).  ||  Write tests for as much as possible/reasonable.
+- Machine might get laggy running kubernetes and everything else.  ||  Run a k8s cluster in the cloud and develop on it almost as quickly as local.
+- Assumption of certain order of events. CommentCreated always assumed that PostCreated was emitted before.  ||  Introduce a lot of code to handle concurrency issue
+
 
 # Docker
 ## Commands
