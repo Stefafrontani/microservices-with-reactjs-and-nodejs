@@ -461,3 +461,36 @@ Our ingress controller can not know the difference between a request POST and an
 For it POST --> /posts  &&   GET --> /posts is just the same.
 This is the reason why we have to modify some urls for in order to make it possible to route them through our ingress controller
 We need to modify our client and the express services
+      A
+      |
+      |
+The above done in this commit:
+We modify routes inside ./client/src/PostCreate
+From:
+  http://posts.com/posts
+To:
+  http://posts.com/posts/create
+
+We modify routes inside ./posts/index.js
+From:
+  post('/posts')
+To:
+  post('/posts/create')
+
+After that, we should re-build the images:
+inside /client
+$ docker build -t stefanofrontani/client .
+inside /posts
+$ docker build -t stefanofrontani/posts .
+
+And then push to to hub
+inside /client
+$ docker push stefanofrontani/client
+inside /posts
+$ docker push stefanofrontani/posts
+
+And then, restart the deployment
+inside /client
+$ kubectl rollout restart deployment client-depl
+inside /posts
+$ kubectl rollout restart deployment posts-depl
