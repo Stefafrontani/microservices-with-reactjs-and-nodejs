@@ -1,3 +1,12 @@
+# PROJECT
+## Lessons learnt
+The big challenge in mciroservices is data.
+Different ways to share data between services. Async and sync. Focus on async.
+Async communication focues on communicating changes using event sent to an event bus.
+Async communication encourages each service to be 100% self-sufficient. It makes it relatively easy to handle temporary downtime or new service creation.
+Docker makes it easier to package up services.
+Kubernetes is a pain to setup, but makes it really easy to deploy and scale apps
+
 # Docker
 ## Commands
 
